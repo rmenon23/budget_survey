@@ -7,8 +7,6 @@ library(stringr)
 library(extrafont)
 
 loadfonts(device = "win")
-# make sure to set the working directory
-setwd()
 # read in data from Qualtrics and limit to only the relevant data needed
 valid_responses_df = read_csv("budget_survey_text.csv", col_names = TRUE)
 
@@ -65,6 +63,7 @@ budget_clean$item[budget_clean$value == 26.08] = "Extra Transportation"
 budget_clean$item[budget_clean$value == 367.25] = "Transportation"
 
 #the following items have to be assigned based on title
+#### CAUTION - NEED TO INCLUDE SPANISH RESPONSES HERE ####
 budget_clean$item[grepl("Library",budget_clean$selection)] = "Library Services"
 budget_clean$item[grepl("Studentcounsel",budget_clean$selection)] = "Counseling Services"
 budget_clean$item[grepl("Close1high",budget_clean$selection)] = "Close HS"
@@ -82,7 +81,58 @@ budget_clean$item = factor(budget_clean$item, levels = c("MS Athletics","HS Athl
                                      "4 Day Week","Extra Transportation","Transportation"))
 
 budget_clean = budget_clean %>% group_by(id) %>% arrange(id, item) %>% mutate(rising_total = cumsum(value)) %>% na.omit()
+
 # create a step graph
 budget_decisions = ggplot(budget_clean, aes(x = item, y = rising_total, group = id)) +
   geom_step(alpha = 0.1, color = "steelblue", size = 0.2) +
   theme_minimal()
+
+#### Need to create the top 3 budgeted bundles
+budget_spread = budget_clean %>% select(id, item, value) %>% spread(item, value)
+
+# create a blank character vector to fill the selections that are non-empty
+budget_spread$selection1 = ""
+budget_spread$selection2 = ""
+budget_spread$selection3 = ""
+budget_spread$selection4 = ""
+budget_spread$selection5 = ""
+budget_spread$selection6 = ""
+budget_spread$selection7 = ""
+budget_spread$selection8 = ""
+budget_spread$selection9 = ""
+budget_spread$selection10 = ""
+budget_spread$selection11 = ""
+budget_spread$selection12 = ""
+budget_spread$selection13 = ""
+budget_spread$selection14 = ""
+budget_spread$selection15 = ""
+budget_spread$selection16 = ""
+budget_spread$selection17 = ""
+
+# fill selection based on the corresponding column header it belongs to
+budget_spread$selection1[!is.na(budget_spread$`MS Athletics`)] = colnames(budget_spread)[2]
+budget_spread$selection2[!is.na(budget_spread$`HS Athletics`)] = colnames(budget_spread)[3]
+budget_spread$selection3[!is.na(budget_spread$`Campus Police`)] = colnames(budget_spread)[4]
+budget_spread$selection4[!is.na(budget_spread$`Central Office`)] = colnames(budget_spread)[5]
+budget_spread$selection5[!is.na(budget_spread$`Custodial Services`)] = colnames(budget_spread)[6]
+budget_spread$selection6[!is.na(budget_spread$`Library Services`)] = colnames(budget_spread)[7]
+budget_spread$selection7[!is.na(budget_spread$`Counseling Services`)] = colnames(budget_spread)[8]
+budget_spread$selection8[!is.na(budget_spread$`Close HS`)] = colnames(budget_spread)[9]
+budget_spread$selection9[!is.na(budget_spread$`Close 1st ES`)] = colnames(budget_spread)[10]
+budget_spread$selection10[!is.na(budget_spread$`Close 2nd ES`)] = colnames(budget_spread)[11]
+budget_spread$selection11[!is.na(budget_spread$`Close 3rd ES`)] = colnames(budget_spread)[12]
+budget_spread$selection12[!is.na(budget_spread$`Increase by 1`)] = colnames(budget_spread)[13]
+budget_spread$selection13[!is.na(budget_spread$`Increase by 2`)] = colnames(budget_spread)[14]
+budget_spread$selection14[!is.na(budget_spread$`Shortened Year`)] = colnames(budget_spread)[15]
+budget_spread$selection15[!is.na(budget_spread$`4 Day Week`)] = colnames(budget_spread)[16]
+budget_spread$selection16[!is.na(budget_spread$`Extra Transportation`)] = colnames(budget_spread)[17]
+budget_spread$selection17[!is.na(budget_spread$`Transportation`)] = colnames(budget_spread)[18]
+
+# concatenate all of the selections together to get the bundle for each respondant
+budget_spread$selection = do.call(paste, list(budget_spread$selection1,budget_spread$selection2,budget_spread$selection3,
+  budget_spread$selection4,budget_spread$selection5,budget_spread$selection6,budget_spread$selection7,budget_spread$selection8,
+  budget_spread$selection9,budget_spread$selection10,budget_spread$selection11,budget_spread$selection12,budget_spread$selection13,
+  budget_spread$selection14,budget_spread$selection15,budget_spread$selection16,budget_spread$selection17), sep = ",")
+
+# collapse by to get the frequency of each bundle
+budget_freq = budget_spread %>% group_by(selection) %>% summarize(freq = n()) %>% arrange(-freq)
