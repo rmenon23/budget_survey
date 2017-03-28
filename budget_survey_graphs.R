@@ -129,10 +129,25 @@ budget_spread$selection16[!is.na(budget_spread$`Extra Transportation`)] = colnam
 budget_spread$selection17[!is.na(budget_spread$`Transportation`)] = colnames(budget_spread)[18]
 
 # concatenate all of the selections together to get the bundle for each respondant
-budget_spread$selection = do.call(paste, list(budget_spread$selection1,budget_spread$selection2,budget_spread$selection3,
+args = c(list(budget_spread$selection1,budget_spread$selection2,budget_spread$selection3,
   budget_spread$selection4,budget_spread$selection5,budget_spread$selection6,budget_spread$selection7,budget_spread$selection8,
   budget_spread$selection9,budget_spread$selection10,budget_spread$selection11,budget_spread$selection12,budget_spread$selection13,
   budget_spread$selection14,budget_spread$selection15,budget_spread$selection16,budget_spread$selection17), sep = ",")
 
+budget_spread$selection = do.call(paste, args)
+
 # collapse by to get the frequency of each bundle
 budget_freq = budget_spread %>% group_by(selection) %>% summarize(freq = n()) %>% arrange(-freq)
+budget_freq2 = budget_freq %>% top_n(3) %>% separate(selection, into = c("item1","item2","item3","item4","item5","item6","item7","item8","item9","item10",
+  "item11","item12","item13","item14","item15","item16","item17"),sep = ",") %>% mutate(ranking = rank(freq))
+
+top_budget_bundle = budget_freq2 %>% gather(budget_freq, item, -ranking) %>% arrange(ranking) %>% filter(item != "")
+
+item_to_value = budget_clean %>% group_by(item, value) %>% summarize() %>% select(item = item, value = value)
+
+top_budget_bundle = top_budget_bundle %>% left_join(item_to_value, by = "item") %>% filter(budget_freq != "freq") %>% select(ranking, item, value)
+budget_1 = top_budget_bundle %>% filter(ranking == 1) %>% rename(rank_1_values = value) %>% select(item, rank_1_values)
+budget_2 = top_budget_bundle %>% filter(ranking == 2) %>% rename(rank_2_values = value) %>% select(item, rank_2_values)
+budget_3 = top_budget_bundle %>% filter(ranking == 3) %>% rename(rank_3_values = value) %>% select(item, rank_3_values)
+
+top_budgets = budget_1 %>% full_join(budget_2, by = "item") %>% full_join(budget_3, by = "item")
