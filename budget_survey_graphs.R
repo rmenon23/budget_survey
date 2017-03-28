@@ -1,3 +1,4 @@
+#### This R creates graphs for budget survey analyses ####
 
 # load in required libraries
 library(tidyverse) #need ggplot2, readr, tidyr, dplyr
