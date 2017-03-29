@@ -159,8 +159,38 @@ write_excel_csv(top_budgets, path = "visualizations/top_budget_combos.csv")
 
 ##### Create an overall rank table #####
 rankings = valid_responses_df %>% select(rank_ms_athletic, rank_consolidate_athletic, rank_elim_ms_hs, rank_elim_bus_extra, rank_police, rank_central_office,
-  rank_inc_1, rank_inc_2, rank_counseling, rank_custodian, rank_library, rank_close_hs, rank_consolidate_elem, rank_furlough, rank_four_days) %>% gather() %>% na.omit()
+  rank_inc_1, rank_inc_2, rank_counseling, rank_custodian, rank_library, rank_close_hs, rank_consolidate_elem, rank_furlough, rank_four_days, rank_elim_bus) %>%
+  gather() %>% na.omit()
 
 overall_rank = rankings %>% group_by(key) %>% summarize(rank = sum(value)) %>% mutate(ranking = rank(rank)) %>% arrange(ranking) %>% select(key, ranking)
 
-overall_rank$key[overall_rank$key == ""] = ""
+overall_rank$key[overall_rank$key == "rank_central_office"] = "Further reduce central office services to schools"
+overall_rank$key[overall_rank$key == "rank_consolidate_athletic"] = "Consolidate athletic teams across schools (ex:  combine one school's team with another)"
+overall_rank$key[overall_rank$key == "rank_ms_athletic"] = "Eliminate middle school athletic programming"
+overall_rank$key[overall_rank$key == "rank_elim_bus_extra"] = "Eliminate all bus transportation for extracurriculars (games, competitions, field trips, etc.)"
+overall_rank$key[overall_rank$key == "rank_inc_1"] = "Further increase class size by 1 student"
+overall_rank$key[overall_rank$key == "rank_custodian"] = "Reduce custodial services to schools"
+overall_rank$key[overall_rank$key == "rank_police"] = "Further reduce campus security and police expenditures"
+overall_rank$key[overall_rank$key == "rank_library"] = "Reduce library staffing and distribute library staff across schools"
+overall_rank$key[overall_rank$key == "rank_four_days"] = "4-day school and staff work weeks (same number of hours for student and staff spread over 4 days)"
+overall_rank$key[overall_rank$key == "rank_elim_ms_hs"] = "Eliminate middle and high school athletic programming"
+overall_rank$key[overall_rank$key == "rank_inc_2"] = "Further increase class size by 2 students"
+overall_rank$key[overall_rank$key == "rank_counseling"] = "Reduce counseling positions and distribute counseling staff across schools."
+overall_rank$key[overall_rank$key == "rank_consolidate_elem"] = "Consolidate schools (ex:  combine 3 elementary schools)"
+overall_rank$key[overall_rank$key == "rank_furlough"] = "Shorten school year and reduce the paid work year of all TPS employees by 7 days"
+overall_rank$key[overall_rank$key == "rank_close_hs"] = "Close schools (ex:  close a high school)"
+overall_rank$key[overall_rank$key == "rank_elim_bus"] = "Eliminate bus services except as required by law for special education and homeless students"
+
+# write the analysis to a csv file
+write_excel_csv(overall_rank, path = "visualizations/overall_rank.csv")
+
+##### Create a rank table for all community members #####
+comm_rankings = valid_responses_df %>% select(community_role, rank_ms_athletic, rank_consolidate_athletic, rank_elim_ms_hs, rank_elim_bus_extra, rank_police, rank_central_office,
+  rank_inc_1, rank_inc_2, rank_counseling, rank_custodian, rank_library, rank_close_hs, rank_consolidate_elem, rank_furlough, rank_four_days, rank_elim_bus)
+
+comm_rankings = comm_rankings %>% separate(community_role, into = c("member1","member2","member3","member4","member5","member6","member7","member8","member9","member10","member11","member12"), sep = ",")
+#
+# comm_rankings_long = comm_rankings %>% gather(key = member1:member12, value = rank_ms_athletic:rank_elim_bus) %>% na.omit()
+#
+# true_comm_ranking = comm_rankings_long %>% group_by(community_role, comm_rankings) %>%
+#   summarize(rank = sum(ranked_item))
