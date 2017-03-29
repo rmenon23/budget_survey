@@ -8,7 +8,7 @@ library(extrafont)
 
 loadfonts(device = "win")
 # read in data from Qualtrics and limit to only the relevant data needed
-valid_responses_df = read_csv("budget_survey_text.csv", col_names = TRUE)
+valid_responses_df = read_csv("clean_data/budget_survey_text.csv", col_names = TRUE)
 
 ##### who responded to the survey #####
 members = valid_responses_df %>% select(community_role, community_role_sp)
@@ -144,6 +144,8 @@ budget_freq2 = budget_freq %>% top_n(3) %>% separate(selection, into = c("item1"
 top_budget_bundle = budget_freq2 %>% gather(budget_freq, item, -ranking) %>% arrange(ranking) %>% filter(item != "")
 
 item_to_value = budget_clean %>% group_by(item, value) %>% summarize() %>% select(item = item, value = value)
+write_excel_csv(item_to_value, path = "clean_data/item_to_value.csv")
+
 
 top_budget_bundle = top_budget_bundle %>% left_join(item_to_value, by = "item") %>% filter(budget_freq != "freq") %>% select(ranking, item, value)
 budget_1 = top_budget_bundle %>% filter(ranking == 1) %>% rename(rank_1_values = value) %>% select(item, rank_1_values)
@@ -151,3 +153,6 @@ budget_2 = top_budget_bundle %>% filter(ranking == 2) %>% rename(rank_2_values =
 budget_3 = top_budget_bundle %>% filter(ranking == 3) %>% rename(rank_3_values = value) %>% select(item, rank_3_values)
 
 top_budgets = budget_1 %>% full_join(budget_2, by = "item") %>% full_join(budget_3, by = "item")
+
+# export the created table and format the table in Excel
+write_excel_csv(top_budgets, path = "visualizations/top_budget_combos.csv")
