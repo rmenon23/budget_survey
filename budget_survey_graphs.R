@@ -156,3 +156,11 @@ top_budgets = budget_1 %>% full_join(budget_2, by = "item") %>% full_join(budget
 
 # export the created table and format the table in Excel
 write_excel_csv(top_budgets, path = "visualizations/top_budget_combos.csv")
+
+##### Create an overall rank table #####
+rankings = valid_responses_df %>% select(rank_ms_athletic, rank_consolidate_athletic, rank_elim_ms_hs, rank_elim_bus_extra, rank_police, rank_central_office,
+  rank_inc_1, rank_inc_2, rank_counseling, rank_custodian, rank_library, rank_close_hs, rank_consolidate_elem, rank_furlough, rank_four_days) %>% gather() %>% na.omit()
+
+overall_rank = rankings %>% group_by(key) %>% summarize(rank = sum(value)) %>% mutate(ranking = rank(rank)) %>% arrange(ranking) %>% select(key, ranking)
+
+overall_rank$key[overall_rank$key == ""] = ""
