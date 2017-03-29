@@ -188,7 +188,8 @@ write_excel_csv(overall_rank, path = "visualizations/overall_rank.csv")
 comm_rankings = valid_responses_df %>% select(community_role, rank_ms_athletic, rank_consolidate_athletic, rank_elim_ms_hs, rank_elim_bus_extra, rank_police, rank_central_office,
   rank_inc_1, rank_inc_2, rank_counseling, rank_custodian, rank_library, rank_close_hs, rank_consolidate_elem, rank_furlough, rank_four_days, rank_elim_bus)
 
-comm_rankings = comm_rankings %>% separate(community_role, into = c("member1","member2","member3","member4","member5","member6","member7","member8","member9","member10","member11","member12"), sep = ",")
+comm_rankings_long = comm_rankings %>% gather(comm_rankings, c(member,community_role)) %>%
+  separate(community_role, into = c("member1","member2","member3","member4","member5","member6","member7","member8","member9","member10","member11","member12"), sep = ",")
 #
 # comm_rankings_long = comm_rankings %>% gather(key = member1:member12, value = rank_ms_athletic:rank_elim_bus) %>% na.omit()
 #
