@@ -11,7 +11,7 @@ library(formattable)
 
 loadfonts(device = "win")
 # read in data from Qualtrics and limit to only the relevant data needed
-valid_responses_df = read_csv("clean_data/budget_survey_text.csv", col_names = TRUE)
+valid_responses_df = read_csv("clean_data/budget_survey_numeric.csv", col_names = TRUE)
 
 valid_responses_df$rank_ms_athletic[is.na(valid_responses_df$rank_ms_athletic)] = valid_responses_df$rank_ms_athletic_sp
 valid_responses_df$rank_consolidate_athletic[is.na(valid_responses_df$rank_consolidate_athletic)] = valid_responses_df$rank_consolidate_athletic_sp
