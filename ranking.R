@@ -34,15 +34,44 @@ rankings = valid_responses_df %>% select(rank_ms_athletic, rank_consolidate_athl
   rank_inc_1, rank_inc_2, rank_counseling, rank_custodian, rank_library, rank_close_hs, rank_consolidate_elem, rank_furlough, rank_four_days, rank_elim_bus) %>%
   gather() %>% na.omit()
 
-ranked_first = rankings %>% filter(value == 1) %>% group_by(key) %>% summarize(count = n()) %>% mutate(total = sum(count), percent = round((count / total) * 100,0)) %>% arrange(-percent) %>% top_n(3)
-ranked_last = rankings %>% filter( value == 16) %>% group_by(key) %>% summarize(count = n()) %>% mutate(total = sum(count), percent = round((count / total) * 100,0)) %>% arrange(-percent) %>% top_n(3)
+ranked_first = rankings %>% filter(value == 1) %>% group_by(key) %>% summarize(count = n()) %>% mutate(total = sum(count), percent = (count / total) * 100) %>% arrange(-percent) %>% top_n(3)
+ranked_last = rankings %>% filter( value == 16) %>% group_by(key) %>% summarize(count = n()) %>% mutate(total = sum(count), percent = (count / total) * 100) %>% arrange(-percent) %>% top_n(3)
 ranked_last$percent = -ranked_last$percent
 rank_list = bind_rows(ranked_first, ranked_last)
+rank_list$percent = round(as.numeric(rank_list$percent),0)
+rank_list$percent_label = abs(rank_list$percent)
 
-write_excel_csv(rank_list, path = "visualizations/rank_list.csv")
+rank_list$sign[rank_list$percent > 0] = "pos"
+rank_list$sign[rank_list$percent < 0] = "neg"
+
+rank_list$key[rank_list$key == "rank_central_office"] = "Central Office"
+rank_list$key[rank_list$key == "rank_four_days" & rank_list$sign == "pos"] = "Four Day School Weeks"
+rank_list$key[rank_list$key == "rank_four_days" & rank_list$sign == "neg"] = " Four Day School Weeks"
+rank_list$key[rank_list$key == "rank_ms_athletic"] = "Eliminate Middle School Athletics"
+rank_list$key[rank_list$key == "rank_furlough"] = "Furlough"
+rank_list$key[rank_list$key == "rank_close_hs"] = "Close a High School"
+
+rank_list = rank_list %>% arrange(-percent)
+
+first_last_graph = ggplot(rank_list, aes(x = reorder(key, percent), y = percent, fill = sign)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  geom_text(aes(label = paste0(percent_label,"%"), family = "Arial Narrow"), fontface = "bold", position = position_stack(0.5)) +
+  scale_fill_manual(values = c("tomato1","aquamarine3")) +
+  theme(text=element_text(family="Arial Narrow", size = 14, face = "bold"),
+        axis.line=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),
+        legend.position="none",
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank())
+
+ggsave("First and Last Rank.jpeg", plot = first_last_graph, path = "visualizations/")
 
 rankings$value = as.numeric(rankings$value)
-
 overall_rank = rankings %>% group_by(key) %>% summarize(rank = sum(value)) %>% mutate(ranking = rank(rank)) %>% arrange(ranking) %>% select(key, ranking)
 
 overall_rank$key[overall_rank$key == "rank_central_office"] = "Further reduce central office services to schools"

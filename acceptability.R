@@ -43,7 +43,7 @@ accept_graph = ggplot(accept_level, aes(x = reorder(variable, percent2), y = per
   geom_bar(stat = "identity") +
   coord_flip() +
   geom_text(aes(label = paste0(percent,"%"), family = "Arial Narrow"), fontface = "bold", position = position_stack(0.5)) +
-  scale_fill_brewer(palette = "Accent") +
+  scale_fill_manual(values = c("tomato1","aquamarine3","azure3")) +
   theme(text=element_text(family="Arial Narrow", size = 14, face = "bold"),
         axis.line=element_blank(),
         axis.text.x=element_blank(),
@@ -54,3 +54,5 @@ accept_graph = ggplot(accept_level, aes(x = reorder(variable, percent2), y = per
         panel.background=element_blank(),
         panel.border=element_blank(),
         panel.grid.major=element_blank())
+
+ggsave("acceptability.jpeg", plot = accept_graph, path = "visualizations/", width = 10, height = 5)
