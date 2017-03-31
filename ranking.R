@@ -69,7 +69,7 @@ first_last_graph = ggplot(rank_list, aes(x = reorder(key, percent), y = percent,
         panel.border=element_blank(),
         panel.grid.major=element_blank())
 
-ggsave("First and Last Rank.jpeg", plot = first_last_graph, path = "visualizations/")
+ggsave("First and Last Rank.jpeg", plot = first_last_graph, path = "visualizations/", width = 10, height = 5)
 
 rankings$value = as.numeric(rankings$value)
 overall_rank = rankings %>% group_by(key) %>% summarize(rank = sum(value)) %>% mutate(ranking = rank(rank)) %>% arrange(ranking) %>% select(key, ranking)
