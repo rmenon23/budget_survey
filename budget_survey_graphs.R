@@ -5,6 +5,9 @@ library(tidyverse) #need ggplot2, readr, tidyr, dplyr
 library(lubridate)
 library(stringr)
 library(extrafont)
+library(htmltools)
+library(webshot)
+library(formattable)
 
 loadfonts(device = "win")
 # read in data from Qualtrics and limit to only the relevant data needed
@@ -12,28 +15,38 @@ valid_responses_df = read_csv("clean_data/budget_survey_text.csv", col_names = T
 
 ##### who responded to the survey #####
 members = valid_responses_df %>% select(community_role, community_role_sp)
-members$community_role[members$community_role_sp == "Maestro de TPS"] = "TPS teacher"
-members$community_role[members$community_role_sp == "Padre de un alumno actual o futuro de TPS"] = "Parent of current or future TPS student"
+members$community_role[is.na(members$community_role)] = members$community_role_sp
 members$community_role_sp = NULL
 
+members$id = rownames(members)
+members$id_num = as.numeric(members$id)
 members_counted = members %>%
   separate(community_role, into = c("member1","member2","member3","member4","member5","member6","member7","member8","member9","member10","member11","member12"), sep = ",") %>%
-  gather() %>% na.omit() %>% group_by(value) %>% summarize(count = n()) %>% mutate(total = sum(count), percent = count / total) %>% arrange(percent)
+  gather(members, member, -id) %>% na.omit() 
+
+members_counted$id_num = as.numeric(members_counted$id)
+
+members_counted = members_counted %>% group_by(id) %>% mutate(roles_picked = count(id_num))
+
+#%>% group_by(value) %>% summarize(count = n()) %>% mutate(total = sum(count), percent = count / total) %>% arrange(percent)
 
 members_counted$ymax = cumsum(members_counted$percent)
 members_counted$ymin = c(0, head(members_counted$ymax, n = -1))
 
+write_excel_csv(members_counted, path = "visualizations/members_counted.csv")
+
 # creates a donut chart all self-identified community coles
-members_plot = ggplot(members_counted, aes(fill = value, ymax = ymax, ymin = ymin, xmax = 4, xmin = 2.5)) +
-  geom_rect() + coord_polar(theta = "y") +
-  xlim(c(0, 4)) +
-  theme(text=element_text(family="Arial Narrow", size = 14, face = "bold")) +
-  theme(panel.grid=element_blank()) +
-  theme(panel.background=element_blank()) +
-  theme(axis.text=element_blank()) +
-  theme(axis.ticks=element_blank()) +
-  annotate("text", x = 0, y = 0, label = "4433\n Community Members\n Responded", size = 7.5, fontface = 2, family="Arial Narrow") +
-  labs(x = "", y = "",title="") + scale_fill_brewer(palette = "Paired")
+# members_plot = ggplot(members_counted, aes(fill = value, ymax = ymax, ymin = ymin, xmax = 4, xmin = 2.5)) +
+#  geom_rect() + coord_polar(theta = "y") +
+#  geom_text_repel(aes(label = paste(value,"\n",count), x = 4, y = (ymin + ymax)), size = 4) +
+#  xlim(c(0, 4)) +
+#  theme(text=element_text(family="Arial Narrow", size = 14, face = "bold")) +
+#  theme(panel.grid=element_blank()) +
+#  theme(panel.background=element_blank()) +
+#  theme(axis.text=element_blank()) +
+#  theme(axis.ticks=element_blank()) +
+#  annotate("text", x = 0, y = 0, label = "4433\n Community Members\n Responded", size = 7.5, fontface = 2, family="Arial Narrow") +
+#  labs(x = "", y = "",title="") + scale_fill_brewer(palette = "Paired")
 
 ##### what things did folks pick for the 1000 question #####
 eng_budget = valid_responses_df %>% select(budget) %>% na.omit()
@@ -87,7 +100,7 @@ budget_decisions = ggplot(budget_clean, aes(x = item, y = rising_total, group = 
   geom_step(alpha = 0.1, color = "steelblue", size = 0.2) +
   theme_minimal()
 
-#### Need to create the top 3 budgeted bundles
+##### Need to create the top 3 budgeted bundles ##### 
 budget_spread = budget_clean %>% select(id, item, value) %>% spread(item, value)
 
 # create a blank character vector to fill the selections that are non-empty
@@ -162,6 +175,13 @@ rankings = valid_responses_df %>% select(rank_ms_athletic, rank_consolidate_athl
   rank_inc_1, rank_inc_2, rank_counseling, rank_custodian, rank_library, rank_close_hs, rank_consolidate_elem, rank_furlough, rank_four_days, rank_elim_bus) %>%
   gather() %>% na.omit()
 
+ranked_first = rankings %>% filter(value == 1) %>% group_by(key) %>% summarize(count = n()) %>% mutate(total = sum(count), percent = round((count / total) * 100,0)) %>% arrange(-percent) %>% top_n(3)
+ranked_last = rankings %>% filter( value == 16) %>% group_by(key) %>% summarize(count = n()) %>% mutate(total = sum(count), percent = round((count / total) * 100,0)) %>% arrange(-percent) %>% top_n(3)
+ranked_last$percent = -ranked_last$percent
+rank_list = bind_rows(ranked_first, ranked_last)
+
+write_excel_csv(rank_list, path = "visualizations/rank_list.csv")
+
 overall_rank = rankings %>% group_by(key) %>% summarize(rank = sum(value)) %>% mutate(ranking = rank(rank)) %>% arrange(ranking) %>% select(key, ranking)
 
 overall_rank$key[overall_rank$key == "rank_central_office"] = "Further reduce central office services to schools"
@@ -181,6 +201,24 @@ overall_rank$key[overall_rank$key == "rank_furlough"] = "Shorten school year and
 overall_rank$key[overall_rank$key == "rank_close_hs"] = "Close schools (ex:  close a high school)"
 overall_rank$key[overall_rank$key == "rank_elim_bus"] = "Eliminate bus services except as required by law for special education and homeless students"
 
+overall_rank = overall_rank %>% rename(`Budget Item` = key, `Rank` = ranking) %>% select(`Rank`, `Budget Item`)
+
+overall_rank_table = formattable(overall_rank, list( `Rank` = c(color_tile("white","firebrick 3"))))
+
+export_formattable <- function(f, file, width = "70%", height = NULL, 
+                               background = "white", delay = 0.2)
+{
+  w <- as.htmlwidget(f, width = width, height = height)
+  path <- html_print(w, background = background, viewer = NULL)
+  url <- paste0("file:///", gsub("\\\\", "/", normalizePath(path)))
+  webshot(url,
+          file = file,
+          selector = ".formattable_widget",
+          delay = delay)
+}
+
+export_formattable(overall_rank_table, "visualizations/overall_rank.png")
+
 # write the analysis to a csv file
 write_excel_csv(overall_rank, path = "visualizations/overall_rank.csv")
 
@@ -188,10 +226,12 @@ write_excel_csv(overall_rank, path = "visualizations/overall_rank.csv")
 comm_rankings = valid_responses_df %>% select(community_role, rank_ms_athletic, rank_consolidate_athletic, rank_elim_ms_hs, rank_elim_bus_extra, rank_police, rank_central_office,
   rank_inc_1, rank_inc_2, rank_counseling, rank_custodian, rank_library, rank_close_hs, rank_consolidate_elem, rank_furlough, rank_four_days, rank_elim_bus)
 
-comm_rankings_long = comm_rankings %>% gather(comm_rankings, c(member,community_role)) %>%
+comm_rankings_long = comm_rankings %>% 
   separate(community_role, into = c("member1","member2","member3","member4","member5","member6","member7","member8","member9","member10","member11","member12"), sep = ",")
-#
-# comm_rankings_long = comm_rankings %>% gather(key = member1:member12, value = rank_ms_athletic:rank_elim_bus) %>% na.omit()
-#
-# true_comm_ranking = comm_rankings_long %>% group_by(community_role, comm_rankings) %>%
-#   summarize(rank = sum(ranked_item))
+
+#export the table for team member to community member list
+library(reshape2)
+comm_rankings_long2 = melt(comm_rankings_long, id = c("member1","member2","member3","member4","member5","member6","member7","member8","member9","member10","member11","member12"))
+write_excel_csv(comm_rankings_long2, path = "clean_data/role_rank_incomplete.csv")
+
+
