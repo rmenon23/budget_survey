@@ -36,14 +36,30 @@ members_counted$member[members_counted$member == "Empleado retirado de TPS"] = "
 members_counted$member[members_counted$member == "Director de TPS"] = "TPS principal"
 members_counted$member[members_counted$member == "Otro"] = "Other"
 
-members_counted = members_counted %>% group_by(member) %>% summarize(count = n()))
-members_counted$ymax = cumsum(members_counted$percent)
-members_counted$ymin = c(0, head(members_counted$ymax, n = -1))
-
+members_counted = members_counted %>% group_by(member) %>% summarize(count = n())
+members_counted$adjust_count = members_counted$count + 20
 write_excel_csv(members_counted, path = "visualizations/members_counted.csv")
 
-creates a donut chart all self-identified community coles
-members_plot = ggplot(members_counted, aes(fill = value, ymax = ymax, ymin = ymin, xmax = 4, xmin = 2.5)) +
+members_plot = ggplot(members_counted, aes(x = reorder(member, count), y = adjust_count)) +
+      theme(
+            axis.title.x = element_blank(),
+            axis.title.y = element_blank(),
+            axis.text.x = element_blank(),
+            axis.ticks = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            panel.background = element_blank(),
+            legend.background = element_blank(),
+            text=element_text(family="Arial Narrow", size = 14, face = "bold"),
+            legend.position = "none")+
+      geom_bar(stat = "identity", fill = "deepskyblue4") +
+      coord_flip() +
+      geom_text(aes(label=count, family="Arial Narrow"), size = 3.9, color = "white", hjust = 1.05, fontface = "bold")
+
+ggsave("community members.jpeg", plot = members_plot, path = "visualizations/", width = 10, height = 5)
+
+# creates a donut chart all self-identified community coles
+members_plot2 = ggplot(members_counted, aes(fill = value, ymax = ymax, ymin = ymin, xmax = 4, xmin = 2.5)) +
  geom_rect() + coord_polar(theta = "y") +
  geom_text_repel(aes(label = paste(value,"\n",count), x = 4, y = (ymin + ymax)), size = 4) +
  xlim(c(0, 4)) +

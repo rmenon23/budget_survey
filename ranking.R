@@ -56,7 +56,7 @@ rank_list = rank_list %>% arrange(-percent)
 first_last_graph = ggplot(rank_list, aes(x = reorder(key, percent), y = percent, fill = sign)) +
   geom_bar(stat = "identity") +
   coord_flip() +
-  geom_text(aes(label = paste0(percent_label,"%"), family = "Arial Narrow"), fontface = "bold", position = position_stack(0.5)) +
+  geom_text(aes(label = paste0(percent_label,"%"), family = "Arial Narrow"), size = 5, fontface = "bold", position = position_stack(0.5)) +
   scale_fill_manual(values = c("tomato1","aquamarine3")) +
   theme(text=element_text(family="Arial Narrow", size = 14, face = "bold"),
         axis.line=element_blank(),
@@ -69,7 +69,7 @@ first_last_graph = ggplot(rank_list, aes(x = reorder(key, percent), y = percent,
         panel.border=element_blank(),
         panel.grid.major=element_blank())
 
-ggsave("First and Last Rank.jpeg", plot = first_last_graph, path = "visualizations/", width = 10, height = 5)
+ggsave("First and Last Rank.jpeg", plot = first_last_graph, path = "visualizations/", width = 8, height = 5)
 
 rankings$value = as.numeric(rankings$value)
 overall_rank = rankings %>% group_by(key) %>% summarize(rank = sum(value)) %>% mutate(ranking = rank(rank)) %>% arrange(ranking) %>% select(key, ranking)
@@ -97,7 +97,7 @@ overall_rank$Rank = as.character(overall_rank$Rank)
 overall_rank_table = formattable(overall_rank, list(Rank = formatter("span",
   style = x ~ style(display = "block", "border-radius" = "4px", "padding-right" = "4px", color = "white", "background-color" = "firebrick", "font-weight" = "bold"))))
 
-export_formattable <- function(f, file, width = "70%", height = NULL, background = "white", delay = 0.2){
+export_formattable <- function(f, file, width = "80%", height = NULL, background = "white", delay = 0.2){
   w <- as.htmlwidget(f, width = width, height = height)
   path <- html_print(w, background = background, viewer = NULL)
   url <- paste0("file:///", gsub("\\\\", "/", normalizePath(path)))
