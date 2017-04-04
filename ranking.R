@@ -57,7 +57,7 @@ first_last_graph = ggplot(rank_list, aes(x = reorder(key, percent), y = percent,
   geom_bar(stat = "identity") +
   coord_flip() +
   geom_text(aes(label = paste0(percent_label,"%"), family = "Arial Narrow"), size = 5, fontface = "bold", position = position_stack(0.5)) +
-  scale_fill_manual(values = c("tomato1","aquamarine3")) +
+  scale_fill_manual(values = c("#D2533C","#4C5A6A")) +
   theme(text=element_text(family="Arial Narrow", size = 14, face = "bold"),
         axis.line=element_blank(),
         axis.text.x=element_blank(),
@@ -92,6 +92,7 @@ overall_rank$key[overall_rank$key == "rank_close_hs"] = "Close schools (ex:  clo
 overall_rank$key[overall_rank$key == "rank_elim_bus"] = "Eliminate bus services except as required by law for special education and homeless students"
 
 overall_rank = overall_rank %>% rename(`Budget Item` = key, Rank = ranking) %>% select(Rank, `Budget Item`)
+write_excel_csv(overall_rank, path = "visualizations/overall_rank.csv")
 
 overall_rank$Rank = as.character(overall_rank$Rank)
 overall_rank_table = formattable(overall_rank, list(Rank = formatter("span",
