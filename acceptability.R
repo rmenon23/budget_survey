@@ -43,7 +43,7 @@ accept_graph = ggplot(accept_level, aes(x = reorder(variable, percent2), y = per
   geom_bar(stat = "identity") +
   coord_flip() +
   geom_text(aes(label = paste0(percent,"%"), family = "Arial Narrow"), fontface = "bold", position = position_stack(0.5)) +
-  scale_fill_manual(values = c("tomato1","aquamarine3","azure3")) +
+  scale_fill_manual(values = c("#E84F25","#28ABE2","#5C5C5C")) +
   theme(text=element_text(family="Arial Narrow", size = 14, face = "bold"),
         axis.line=element_blank(),
         axis.text.x=element_blank(),

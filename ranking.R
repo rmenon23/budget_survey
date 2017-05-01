@@ -57,7 +57,7 @@ first_last_graph = ggplot(rank_list, aes(x = reorder(key, percent), y = percent,
   geom_bar(stat = "identity") +
   coord_flip() +
   geom_text(aes(label = paste0(percent_label,"%"), family = "Arial Narrow"), size = 5, fontface = "bold", position = position_stack(0.5)) +
-  scale_fill_manual(values = c("#D2533C","#4C5A6A")) +
+  scale_fill_manual(values = c("#E84F25","#6CCD40")) +
   theme(text=element_text(family="Arial Narrow", size = 14, face = "bold"),
         axis.line=element_blank(),
         axis.text.x=element_blank(),
@@ -96,7 +96,7 @@ write_excel_csv(overall_rank, path = "visualizations/overall_rank.csv")
 
 overall_rank$Rank = as.character(overall_rank$Rank)
 overall_rank_table = formattable(overall_rank, list(Rank = formatter("span",
-  style = x ~ style(display = "block", "border-radius" = "4px", "padding-right" = "4px", color = "white", "background-color" = "firebrick", "font-weight" = "bold"))))
+  style = x ~ style(display = "block", "border-radius" = "4px", "padding-right" = "4px", color = "white", "background-color" = "#E84F25", "font-weight" = "bold"))))
 
 export_formattable <- function(f, file, width = "80%", height = NULL, background = "white", delay = 0.2){
   w <- as.htmlwidget(f, width = width, height = height)

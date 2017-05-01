@@ -52,7 +52,7 @@ members_plot = ggplot(members_counted, aes(x = reorder(member, count), y = adjus
             legend.background = element_blank(),
             text=element_text(family="Arial Narrow", size = 14, face = "bold"),
             legend.position = "none")+
-      geom_bar(stat = "identity", fill = "deepskyblue4") +
+      geom_bar(stat = "identity", fill = "#6E2B70") +
       coord_flip() +
       geom_text(aes(label=count, family="Arial Narrow"), size = 3.9, color = "white", hjust = 1.05, fontface = "bold")
 
